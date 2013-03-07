@@ -1,0 +1,18 @@
+Directories
+- data: training and test data
+- ner: Stanford NER
+  + models: model files and property files
+- ilp: Bilingual ILP
+- scripts: Some useful scrips
+
+Steps (See run.sh)
+- CRF-based NER
+ * training: build Chinese and English NER models
+ * test: predict NER results and probability of each word to a tag
+- Calculate PMI
+ * calculate PMI scores through the NER results
+- Bilingual ILP
+ * predict NER results with bilingual ILP
+- Evaluation
+ * evaluate the performances of CRF-based and Bi_ILP-based NER
+
