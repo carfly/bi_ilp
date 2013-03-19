@@ -128,12 +128,14 @@ def constraints_viterbi(lp, sent, var_num):
             var_index += 1
 
         offset = 0
+        constraint_viterbi = {}
         for (label1, label2), score in sent[line_index + 1][1].iteritems():
             if label1 in constraints:
-                constraint_viterbi = constraints[label1]
-                constraint_viterbi[var_index + offset] = -1
-                lpsolve('add_constraint', lp, constraint_viterbi, EQ, 0)
+                constraint_viterbi[label1] = constraints[label1]
+                constraint_viterbi[label1][var_index + offset] = -1
             offset += 1
+        for item in constraint_viterbi.itervalues():
+            lpsolve('add_constraint', lp, item, EQ, 0)
 
 def constraints_4(lp, penalty_index_map, var_number):
     ''' Set constraints: Each word alignment pair can only have one penalty
