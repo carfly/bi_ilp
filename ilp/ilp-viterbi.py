@@ -70,6 +70,18 @@ def constraints_unique(lp, sentence, var_num, var_offset = 0):
             var_index += 1  
         lpsolve('add_constraint', lp, constraint, EQ, 1)
 
+def constraints_IXX(lp, sentence, var_num, var_offset = 0):
+    ''' Set constraints that I-XXX must follow B-XXX or I-XXX
+    '''
+    var_index = var_offset
+    for line in sentence:
+        constraint = [0] * var_num
+        for (label1, label2), score in line[1].iteritems():
+            if label2[:2] == 'I-' and label1[2:] != label2[2:]:
+                constraint[var_index] = 1
+            var_index += 1  
+        lpsolve('add_constraint', lp, constraint, EQ, 0)
+
 def constraints_2(lp, sentence, var_num, var_offset = 0):
     ''' Set constraints: z_{i, O} + z_{i+1, I-XXX} <= 1
     '''
@@ -244,6 +256,7 @@ def mono_viterbi_infer(sent):
 
     constraints_unique(lp, sent, var_num)
     constraints_viterbi(lp, sent, var_num)
+    constraints_IXX(lp, sent, var_num)
 
     lpsolve('set_add_rowmode', lp, False)
     lpsolve('write_lp', lp, 'ne.lp')

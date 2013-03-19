@@ -1,5 +1,5 @@
 上海	B-X_B-X=0.1	B-X_I-X=0.1	B-X_O=0.1	I-X_B-X=0.1	I-X_I-X=0.1	I-X_O=0.1	O_B-X=0.4	O_I-X=0.2	O_O=0.2
 浦东	B-X_B-X=0.3	B-X_I-X=0.4	B-X_O=0.2	I-X_B-X=0.1	I-X_I-X=0.1	I-X_O=0.1	O_B-X=0.1	O_I-X=0.1	O_O=0.1
 开发	B-X_B-X=0.1	B-X_I-X=0.1	B-X_O=0.1	I-X_B-X=0.1	I-X_I-X=0.1	I-X_O=0.3	O_B-X=0.4	O_I-X=0.2	O_O=0.2
-建设	B-X_B-X=0.1	B-X_I-X=0.1	B-X_O=0.1	I-X_B-X=0.1	I-X_I-X=0.1	I-X_O=0.1	O_B-X=0.1	O_I-X=0.2	O_O=0.4
+建设	B-X_B-X=0.1	B-X_I-X=0.1	B-X_O=0.1	I-X_B-X=0.1	I-X_I-X=0.1	I-X_O=0.1	O_B-X=0.1	O_I-X=0.9	O_O=0.4
 
