@@ -3,6 +3,21 @@ import re
 import math
 from lpsolve55 import *
 
+def set_viterbi_obj_fun(sent):
+    obj_fun = []
+    index_map = {}
+    var_index = 0
+    token_index = 0
+    
+    for line in sent:
+        for label_pair, score in line[1].iteritems():
+            obj_fun.append(math.log(score))
+            index_map[(token_index, label_pair)] = var_index
+            var_index += 1
+        token_index += 1
+        
+    return obj_fun, index_map
+    
 def set_prob_obj_fun(sentence, weight, var_offset = 0):
     obj_fun = []
     index_map = {}
@@ -40,6 +55,17 @@ def constraints_1(lp, sentence, var_num, var_offset = 0):
     for line in sentence:
         constraint = [0] * var_num
         for label, prob in line[1].iteritems():
+            constraint[var_index] = 1
+            var_index += 1  
+        lpsolve('add_constraint', lp, constraint, EQ, 1)
+
+def constraints_unique(lp, sentence, var_num, var_offset = 0):
+    ''' Set constraints that only one label for each token
+    '''
+    var_index = var_offset
+    for line in sentence:
+        constraint = [0] * var_num
+        for label_pair, score in line[1].iteritems():
             constraint[var_index] = 1
             var_index += 1  
         lpsolve('add_constraint', lp, constraint, EQ, 1)
@@ -87,6 +113,26 @@ def constraints_3(lp, sentence, var_num, var_offset = 0):
                     constraint3 = constraints[label]
                     constraint3[var_index + offset] = -1
                     lpsolve('add_constraint', lp, constraint3, GE, 0)
+            offset += 1
+
+def constraints_viterbi(lp, sent, var_num):
+    ''' Set constraints: z_{i, label2} = z_{i+1, label1}
+    '''
+    var_index = 0
+    for line_index in range(len(sent) - 1):
+        constraints = {}
+        for (label1, label2), score in sent[line_index][1].iteritems():
+            if label2 not in constraints:
+                constraints[label2] = [0] * var_num
+            constraints[label2][var_index] = 1
+            var_index += 1
+
+        offset = 0
+        for (label1, label2), score in sent[line_index + 1][1].iteritems():
+            if label1 in constraints:
+                constraint_viterbi = constraints[label1]
+                constraint_viterbi[var_index + offset] = -1
+                lpsolve('add_constraint', lp, constraint_viterbi, EQ, 0)
             offset += 1
 
 def constraints_4(lp, penalty_index_map, var_number):
@@ -139,6 +185,28 @@ def get_labels(sent, index_map, variables):
         token_index += 1
     return labels
 
+def get_viterbi_labels(sent, index_map, variables):
+    labels = []
+    token_index = 0
+    
+    for line in sent:
+        for (label1, label2), prob in line[1].iteritems():
+            if variables[index_map[(token_index, label2)]] == 1:
+                labels.append(label2)
+        token_index += 1
+    return labels
+
+def viterbi_output(sent, labels):
+    if len(labels) != len(sent):
+        labels = ['O'] * len(sent)
+
+    index = 0
+    for label in labels:
+        sys.stdout.write(sent[index][0] + '\t' + label + '\n')
+        index += 1
+    
+    sys.stdout.write('\n')
+
 def bi_output(zh_sent, en_sent, zh_labels, en_labels):
     if len(zh_labels) != len(zh_sent) or len(en_labels) != len(en_sent):
         zh_labels = ['O'] * len(zh_sent)
@@ -157,6 +225,33 @@ def bi_output(zh_sent, en_sent, zh_labels, en_labels):
     sys.stdout.write('\n')
     sys.stderr.write('\n')
 
+def viterbi_inference(sent):
+    obj_fun, index_map = set_viterbi_obj_fun(sent)
+    
+    var_num = len(obj_fun)
+    lp = lpsolve('make_lp', 0, len(obj_fun))
+
+    for i in range(len(obj_fun)):
+        lpsolve('set_binary', lp, i + 1, True)
+
+    lpsolve('set_maxim', lp)
+    lpsolve('set_verbose', lp, NEUTRAL)
+    # lpsolve('set_verbose', lp, FULL)
+    lpsolve('set_add_rowmode', lp, True)
+    lpsolve('set_obj_fn', lp, obj_fun)
+
+    constraints_unique(lp, sent, var_num)
+    constraints_viterbi(lp, sent, var_num)
+
+    lpsolve('set_add_rowmode', lp, False)
+    # lpsolve('write_lp', lp, 'ne.lp')
+    lpsolve('solve', lp)
+    # print lpsolve('get_objective', lp)
+    variables = lpsolve('get_variables', lp)[0]
+    labels = get_viterbi_labels(sent, index_map, variables)
+    vitrebi_output(sent, labels)
+    lpsolve('delete_lp', lp)
+  
 def bili_inference(zh_sent, en_sent, aligns, penalties):    
     zh_prob_obj_fun, zh_index_map = set_prob_obj_fun(zh_sent, 1)
     en_prob_obj_fun, en_index_map = set_prob_obj_fun(en_sent, 1, len(zh_prob_obj_fun))
