@@ -191,7 +191,7 @@ def get_viterbi_labels(sent, index_map, variables):
     
     for line in sent:
         for (label1, label2), prob in line[1].iteritems():
-            if variables[index_map[(token_index, label2)]] == 1:
+            if variables[index_map[(token_index, (label1, label2))]] == 1:
                 labels.append(label2)
         token_index += 1
     return labels
@@ -225,7 +225,7 @@ def bi_output(zh_sent, en_sent, zh_labels, en_labels):
     sys.stdout.write('\n')
     sys.stderr.write('\n')
 
-def viterbi_inference(sent):
+def mono_viterbi_infer(sent):
     obj_fun, index_map = set_viterbi_obj_fun(sent)
     
     var_num = len(obj_fun)
@@ -244,12 +244,12 @@ def viterbi_inference(sent):
     constraints_viterbi(lp, sent, var_num)
 
     lpsolve('set_add_rowmode', lp, False)
-    # lpsolve('write_lp', lp, 'ne.lp')
+    lpsolve('write_lp', lp, 'ne.lp')
     lpsolve('solve', lp)
     # print lpsolve('get_objective', lp)
     variables = lpsolve('get_variables', lp)[0]
     labels = get_viterbi_labels(sent, index_map, variables)
-    vitrebi_output(sent, labels)
+    viterbi_output(sent, labels)
     lpsolve('delete_lp', lp)
   
 def bili_inference(zh_sent, en_sent, aligns, penalties):    
@@ -327,7 +327,7 @@ def next_clique_sent(file_iter):
             label_pairs_score = {}
             for piece in pieces[1:]:
                 (label_pair, score) = piece.split('=')
-                label_pairs_score[label_pair.split('_')] = float(score)
+                label_pairs_score[tuple(label_pair.split('_'))] = float(score)
             sentence.append((token, label_pairs_score))
 
 def set_penalties(file):
