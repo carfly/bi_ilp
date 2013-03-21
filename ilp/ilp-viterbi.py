@@ -11,7 +11,7 @@ def set_viterbi_obj_fun(sent):
     
     for line in sent:
         for label_pair, score in line[1].iteritems():
-            obj_fun.append(math.log(score))
+            obj_fun.append(score)
             index_map[(token_index, label_pair)] = var_index
             var_index += 1
         token_index += 1
@@ -337,12 +337,12 @@ def next_clique_sent(file_iter):
         if line == '':
             return sentence
         else:
-            pieces = line.split('\t')
-            token = pieces[0]
+            token, table = line.split('\t')
             label_pairs_score = {}
-            for piece in pieces[1:]:
-                (label_pair, score) = piece.split('=')
-                label_pairs_score[tuple(label_pair.split('_'))] = float(score)
+            for factor in table.split(' '):
+                label1, label2, score = factor.split(':')
+                # print label1, label2, score
+                label_pairs_score[(label1, label2)] = -1e10 if score == '-Infinity' else float(score)
             sentence.append((token, label_pairs_score))
 
 def set_penalties(file):
